@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 import 'package:yt_downloader_v2/screens/no_video_selected_page.dart';
 import 'package:yt_downloader_v2/screens/video_select_page.dart';
+import 'package:yt_downloader_v2/screens/yt_search_delegate.dart';
 
+import '../services/youtubedl_service.dart';
 import 'download_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -16,6 +18,18 @@ class HomePageState extends State<HomePage> {
   Video? selectedVideo;
   Future<StreamManifest?>? getManifest;
 
+  void handleSearch(BuildContext ctx) async {
+    final tabCtrl = DefaultTabController.of(ctx);
+    final video =
+        await showSearch(context: context, delegate: YtSearchDelegate());
+    if (video == null) return;
+    setState(() {
+      selectedVideo = video;
+      getManifest = getVideoStreamManifest(video);
+      tabCtrl.animateTo(0);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -24,18 +38,10 @@ class HomePageState extends State<HomePage> {
             appBar: AppBar(
               title: const Text('YouTube Downloader'),
               actions: [
-                IconButton(
-                    onPressed: () async {
-                      // final video = await showSearch(
-                      //     context: context, delegate: VideoSearch());
-                      // if (video == null) return;
-                      // setState(() {
-                      //   selectedVideo = video;
-                      //   getManifest = getVideoStreamManifest(video);
-                      //   DefaultTabController.of(context)?.animateTo(0);
-                      // });
-                    },
-                    icon: const Icon(Icons.search_rounded))
+                Builder(
+                    builder: (ctx) => IconButton(
+                        onPressed: () => handleSearch(ctx),
+                        icon: const Icon(Icons.search_rounded)))
               ],
             ),
             bottomNavigationBar: const TabBar(
