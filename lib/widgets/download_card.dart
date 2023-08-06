@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_redux/flutter_redux.dart';
+import 'package:redux/redux.dart';
+import 'package:yt_downloader_v2/actions/actions.dart';
+import 'package:yt_downloader_v2/models/app_state.dart';
 import 'package:yt_downloader_v2/models/download_state.dart';
 
 class DownloadCard extends StatelessWidget {
@@ -6,9 +10,13 @@ class DownloadCard extends StatelessWidget {
 
   final DownloadState downloadState;
 
-  Widget _buildTrailing() {
+  Widget _buildTrailing(Function startDownload) {
     if (downloadState.status == DownloadStatus.notStarted) {
-      return IconButton(onPressed: () {}, icon: const Icon(Icons.download));
+      return IconButton(
+          onPressed: () {
+            startDownload();
+          },
+          icon: const Icon(Icons.download));
     }
     if (downloadState.status == DownloadStatus.active ||
         downloadState.status == DownloadStatus.processing) {
@@ -18,6 +26,22 @@ class DownloadCard extends StatelessWidget {
             : (getProgress() / 100),
       );
     }
+
+    if (downloadState.status == DownloadStatus.errored) {
+      return IconButton(
+          onPressed: () {
+            startDownload();
+          },
+          icon: const Icon(Icons.error_outline));
+    }
+    if (downloadState.status == DownloadStatus.finished) {
+      return IconButton(
+          onPressed: () {
+            startDownload();
+          },
+          icon: const Icon(Icons.download_done));
+    }
+
     return IconButton(onPressed: () {}, icon: const Icon(Icons.download_done));
   }
 
@@ -51,14 +75,17 @@ class DownloadCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(downloadState.video.title),
-      subtitle: Text(
-        '${getProgress().toStringAsFixed(1)}%',
-        style: const TextStyle(color: Colors.white70),
-      ),
-      leading: _buildLeading(),
-      trailing: _buildTrailing(),
-    );
+    return StoreConnector<AppState, Function>(
+        builder: (context, startDownload) => ListTile(
+              title: Text(downloadState.video.title),
+              subtitle: Text(
+                '${getProgress().toStringAsFixed(1)}%',
+                style: const TextStyle(color: Colors.white70),
+              ),
+              leading: _buildLeading(),
+              trailing: _buildTrailing(startDownload),
+            ),
+        converter: (store) =>
+            () => store.dispatch(StartDownloadAction(downloadState.id)));
   }
 }

@@ -6,7 +6,7 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 import 'package:yt_downloader_v2/actions/actions.dart';
 import 'package:path/path.dart' as path;
 
-enum DownloadStatus { notStarted, active, processing, errored }
+enum DownloadStatus { notStarted, active, processing, errored, finished }
 
 enum DownloadType { videoOnly, audioOnly, muxed, seperateAVThenMux }
 
@@ -35,22 +35,61 @@ class DownloadState {
   num? progressVideo;
 
   String savePath;
+  String saveName;
   DownloadStatus status;
 
-  DownloadState({
-    required this.id,
-    required this.type,
-    required this.video,
-    required this.savePath,
-    required this.status,
-  });
+  DownloadState(
+      {required this.id,
+      required this.type,
+      required this.video,
+      required this.savePath,
+      required this.saveName,
+      required this.status,
+      this.muxedStreamInfo,
+      this.audioStreamInfo,
+      this.videoStreamInfo,
+      this.progressAudio,
+      this.progressMuxed,
+      this.progressVideo});
 
-  static Future<DownloadState> fromAddAction(AddToDownloadList action) async {
+  DownloadState copyWith({
+    String? id,
+    Video? video,
+    DownloadType? type,
+    MuxedStreamInfo? muxedStreamInfo,
+    AudioOnlyStreamInfo? audioStreamInfo,
+    VideoOnlyStreamInfo? videoStreamInfo,
+    num? progressMuxed,
+    num? progressAudio,
+    num? progressVideo,
+    String? savePath,
+    String? saveName,
+    DownloadStatus? status,
+  }) {
+    return DownloadState(
+      id: id ?? this.id,
+      video: video ?? this.video,
+      type: type ?? this.type,
+      muxedStreamInfo: muxedStreamInfo ?? this.muxedStreamInfo,
+      audioStreamInfo: audioStreamInfo ?? this.audioStreamInfo,
+      videoStreamInfo: videoStreamInfo ?? this.videoStreamInfo,
+      progressMuxed: progressMuxed ?? this.progressMuxed,
+      progressAudio: progressAudio ?? this.progressAudio,
+      progressVideo: progressVideo ?? this.progressVideo,
+      savePath: savePath ?? this.savePath,
+      saveName: saveName ?? this.saveName,
+      status: status ?? this.status,
+    );
+  }
+
+  static Future<DownloadState> fromAddAction(
+      AddToDownloadListAction action) async {
     final downloadState = DownloadState(
         id: const Uuid().v4(),
         type: DownloadType.audioOnly,
         video: action.video,
         savePath: '',
+        saveName: '',
         status: DownloadStatus.notStarted);
 
     if (action.audioStreamInfo != null && action.videoStreamInfo != null) {
@@ -72,9 +111,12 @@ class DownloadState {
 
     String sanitizedTitle =
         action.video.title.replaceAll(RegExp(r'[^\w\s]+'), '');
+
+    downloadState.saveName = sanitizedTitle;
+
     String downloadsDir = (await getDownloadDirectory())?.path ?? '';
 
-    downloadState.savePath = path.join(downloadsDir, sanitizedTitle);
+    downloadState.savePath = path.join(downloadsDir);
 
     return downloadState;
   }

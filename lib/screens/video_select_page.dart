@@ -89,8 +89,8 @@ class DownloadSelectCard extends StatelessWidget {
   const DownloadSelectCard(
       {super.key, required this.selectedVideo, required this.manifest});
 
-  Future<void> _handleDownloadPressed(
-      BuildContext context, Function(AddToDownloadList) dispatcher) async {
+  Future<void> _handleDownloadPressed(BuildContext context,
+      Function(AddToDownloadListAction) dispatcher) async {
     final tabCtrl = DefaultTabController.of(context);
 
     final streamInfo = await showDialog<StreamInfo>(
@@ -103,7 +103,7 @@ class DownloadSelectCard extends StatelessWidget {
 
     if (streamInfo == null) return;
 
-    var action = AddToDownloadList(selectedVideo);
+    var action = AddToDownloadListAction(selectedVideo);
 
     if (streamInfo is MuxedStreamInfo) action.muxedStreamInfo = streamInfo;
     if (streamInfo is AudioOnlyStreamInfo) action.audioStreamInfo = streamInfo;
@@ -127,9 +127,9 @@ class DownloadSelectCard extends StatelessWidget {
         YouTubeCard(selectedVideo),
         SizedBox(
           height: 50,
-          child: StoreConnector<AppState, Function(AddToDownloadList)>(
+          child: StoreConnector<AppState, Function(AddToDownloadListAction)>(
             converter: (store) =>
-                (AddToDownloadList action) => store.dispatch(action),
+                (AddToDownloadListAction action) => store.dispatch(action),
             builder: (context, dispatcher) => ElevatedButton(
                 child: const Text("Download"),
                 onPressed: () => _handleDownloadPressed(context, dispatcher)),

@@ -7,6 +7,7 @@ import 'package:yt_downloader_v2/screens/home_page.dart';
 import 'package:redux/redux.dart';
 
 import 'middleware/download_creator.dart';
+import 'middleware/download_runner.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,7 +15,7 @@ Future<void> main() async {
   runApp(MyApp(
     store: Store<AppState>(appReducer,
         initialState: AppState(downloadList: []),
-        middleware: [downloadCreatorMiddleware]),
+        middleware: [downloadCreatorMiddleware, downloadRunnerMiddleware]),
   ));
 }
 
