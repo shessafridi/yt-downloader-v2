@@ -19,26 +19,6 @@ class VideoSelectedPage extends StatelessWidget {
   final Video selectedVideo;
   final void Function(DismissDirection) onDissmissed;
 
-  Future<void> _handleDownloadPressed(
-      BuildContext context, StreamManifest manifest) async {
-    // final list = context.read(downloadListStateProvider);
-
-    // final tabCtrl = DefaultTabController.of(context);
-
-    // final state = await showDialog<DownloadState>(
-    //   context: context,
-    //   builder: (context) => DownloadSelectDialog(
-    //     manifest: manifest,
-    //     videoName: selectedVideo?.title ?? 'Download',
-    //   ),
-    // );
-
-    // if (state != null) {
-    //   list.state.add(state);
-    //   tabCtrl.animateTo(1);
-    // }
-  }
-
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
@@ -93,6 +73,7 @@ class DownloadSelectCard extends StatelessWidget {
       Function(AddToDownloadListAction) dispatcher) async {
     final tabCtrl = DefaultTabController.of(context);
 
+    print(manifest.audioOnly);
     final streamInfo = await showDialog<StreamInfo>(
       context: context,
       builder: (context) => DownloadSelectDialog(
