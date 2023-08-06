@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:media_scanner/media_scanner.dart';
 import 'package:redux/redux.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 import 'package:yt_downloader_v2/actions/actions.dart';
@@ -76,7 +77,14 @@ class _DownloadRunner {
         .addStream(stream)
         .then((_) => fileStream.flush())
         .then((_) => fileStream.close())
-        .then((value) => onComplete());
+        .then((_) {
+      if (Platform.isAndroid) {
+        print("Refreshing $path");
+        return MediaScanner.loadMedia(path: path)
+            .catchError((err) => Future.value(null));
+      }
+      return Future.value(null);
+    }).then((value) => onComplete());
 
     return subscription;
   }
@@ -90,7 +98,7 @@ class _DownloadRunner {
           streamInfo: downloadState.muxedStreamInfo!,
           path: muxFilePath,
           onProgress: (progress) {
-            if ((progress - progress.toInt()).abs() < 0.05) {
+            if ((progress - progress.toInt()).abs() < 0.02) {
               _updateDownloadState(
                   downloadState.copyWith(progressMuxed: progress));
             }

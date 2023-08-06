@@ -43,6 +43,7 @@ dependencies:
   redux: ^5.0.0
   flutter_redux: ^0.10.0
   collection: ^1.17.0
+  media_scanner: ^2.1.0
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1
