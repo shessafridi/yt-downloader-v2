@@ -1,4 +1,5 @@
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+import 'package:yt_downloader_v2/models/download_state.dart';
 
 class AddToDownloadList {
   Video video;
@@ -7,6 +8,12 @@ class AddToDownloadList {
   VideoOnlyStreamInfo? videoStreamInfo;
 
   AddToDownloadList(this.video);
+}
+
+class AddDownloadState {
+  DownloadState downloadState;
+
+  AddDownloadState(this.downloadState);
 }
 
 class UpdateDownloadProgress {
