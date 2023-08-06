@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_redux/flutter_redux.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+import 'package:yt_downloader_v2/actions/actions.dart';
+import 'package:yt_downloader_v2/widgets/download_select_dialog.dart';
 
+import '../models/app_state.dart';
 import '../widgets/youtube_card.dart';
 
 class VideoSelectedPage extends StatelessWidget {
@@ -12,7 +16,7 @@ class VideoSelectedPage extends StatelessWidget {
   }) : super(key: key);
 
   final Future<StreamManifest?>? getManifest;
-  final Video? selectedVideo;
+  final Video selectedVideo;
   final void Function(DismissDirection) onDissmissed;
 
   Future<void> _handleDownloadPressed(
@@ -46,38 +50,25 @@ class VideoSelectedPage extends StatelessWidget {
           var manifest = snapshot.data!;
 
           return SingleChildScrollView(
-            child: Align(
-              alignment: Alignment.center,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 500),
-                child: Dismissible(
-                  key: ObjectKey(selectedVideo),
-                  onDismissed: onDissmissed,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      YouTubeCard(selectedVideo!),
-                      SizedBox(
-                        height: 50,
-                        child: ElevatedButton(
-                          child: const Text("Download"),
-                          onPressed: () =>
-                              _handleDownloadPressed(context, manifest),
-                        ),
-                      )
-                    ],
-                  ),
-                ),
+              child: Align(
+            alignment: Alignment.center,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 500),
+              child: Dismissible(
+                key: ObjectKey(selectedVideo),
+                onDismissed: onDissmissed,
+                child: DownloadSelectCard(
+                    manifest: manifest, selectedVideo: selectedVideo),
               ),
             ),
-          );
+          ));
         }
 
-        return Center(
+        return const Center(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
+            children: [
               CircularProgressIndicator(),
               SizedBox(
                 height: 20,
@@ -87,6 +78,64 @@ class VideoSelectedPage extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class DownloadSelectCard extends StatelessWidget {
+  final Video selectedVideo;
+  final StreamManifest manifest;
+
+  const DownloadSelectCard(
+      {super.key, required this.selectedVideo, required this.manifest});
+
+  Future<void> _handleDownloadPressed(
+      BuildContext context, Function(AddToDownloadList) dispatcher) async {
+    final tabCtrl = DefaultTabController.of(context);
+
+    final streamInfo = await showDialog<StreamInfo>(
+      context: context,
+      builder: (context) => DownloadSelectDialog(
+        manifest: manifest,
+        videoName: selectedVideo.title,
+      ),
+    );
+
+    if (streamInfo == null) return;
+
+    var action = AddToDownloadList(selectedVideo);
+
+    if (streamInfo is MuxedStreamInfo) action.muxedStreamInfo = streamInfo;
+    if (streamInfo is AudioOnlyStreamInfo) action.audioStreamInfo = streamInfo;
+    if (streamInfo is VideoOnlyStreamInfo) {
+      var audio = manifest.audioOnly.sortByBitrate().firstOrNull;
+      if (audio == null) return;
+      action.audioStreamInfo = audio;
+      action.videoStreamInfo = streamInfo;
+    }
+
+    dispatcher(action);
+
+    tabCtrl.animateTo(1);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        YouTubeCard(selectedVideo),
+        SizedBox(
+          height: 50,
+          child: StoreConnector<AppState, Function(AddToDownloadList)>(
+            converter: (store) =>
+                (AddToDownloadList action) => store.dispatch(action),
+            builder: (context, dispatcher) => ElevatedButton(
+                child: const Text("Download"),
+                onPressed: () => _handleDownloadPressed(context, dispatcher)),
+          ),
+        )
+      ],
     );
   }
 }

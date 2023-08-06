@@ -70,7 +70,7 @@ class HomePageState extends State<HomePage> {
                         });
                       },
                       getManifest: getManifest,
-                      selectedVideo: selectedVideo),
+                      selectedVideo: selectedVideo!),
                 const DownloadPage()
               ],
             )));

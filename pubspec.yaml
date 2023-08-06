@@ -38,6 +38,8 @@ dependencies:
   path_provider: ^2.0.15
   google_fonts: ^5.1.0
   uuid: ^3.0.7
+  redux: ^5.0.0
+  flutter_redux: ^0.10.0
 
 dev_dependencies:
   flutter_test:
