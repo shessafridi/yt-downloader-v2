@@ -19,8 +19,7 @@ jobs:
     - name: Set up Flutter
       uses: subosito/flutter-action@v2
       with:
-        channel: stable
-        flutter-version: 3.19.0
+        flutter-version: 'stable'
 
     # Enable Windows desktop support
     - name: Enable Windows Desktop
@@ -32,20 +31,24 @@ jobs:
 
     # Build the Windows executable
     - name: Build Windows
-      run: flutter build windows --release
+      run: flutter build windows --release --verbose
+
+    # Debug build output directory
+    - name: Check Build Directory
+      run: dir .\build\windows\x64\runner\Release\
 
     # Archive the executable into a ZIP file
     - name: Archive Build
       run: |
         mkdir release
-        Compress-Archive -Path .\build\windows\runner\Release\* -DestinationPath .\release\windows-release.zip
+        Compress-Archive -Path .\build\windows\x64\runner\Release\yt_downloader_v2.exe -DestinationPath .\release\yt_downloader_v2.zip
 
     # Upload the artifact
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v3
       with:
         name: windows-release
-        path: ./release/windows-release.zip
+        path: ./release/yt_downloader_v2.zip
 
   release:
     name: Create Release
@@ -68,7 +71,7 @@ jobs:
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: ./release/windows-release.zip
+        artifacts: ./release/yt_downloader_v2.zip
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: ${{ github.ref_name }}
         name: Release ${{ github.ref_name }}
