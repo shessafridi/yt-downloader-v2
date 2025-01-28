@@ -1,0 +1,76 @@
+name: Build and Release Flutter Windows App
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build Flutter Windows
+    runs-on: windows-latest
+
+    steps:
+    # Checkout the code
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # Set up Flutter
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: stable
+        flutter-version: 3.19.0
+
+    # Enable Windows desktop support
+    - name: Enable Windows Desktop
+      run: flutter config --enable-windows-desktop
+
+    # Install dependencies
+    - name: Install dependencies
+      run: flutter pub get
+
+    # Build the Windows executable
+    - name: Build Windows
+      run: flutter build windows --release
+
+    # Archive the executable into a ZIP file
+    - name: Archive Build
+      run: |
+        mkdir release
+        Compress-Archive -Path .\build\windows\runner\Release\* -DestinationPath .\release\windows-release.zip
+
+    # Upload the artifact
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: windows-release
+        path: ./release/windows-release.zip
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout the code
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # Download the build artifact
+    - name: Download Build Artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: windows-release
+        path: ./release
+
+    # Create a new release and upload the artifact
+    - name: Create Release
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: ./release/windows-release.zip
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
+        body: |
+          This release includes the Windows version of the application.
